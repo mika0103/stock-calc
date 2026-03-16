@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>株利益シミュレーター</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2316a34a'/%3E%3Cpolyline points='8,44 20,28 32,36 44,16 56,24' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="株シミュ">
+<meta name="theme-color" content="#16a34a">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -403,6 +409,10 @@ function fmt(n) {
 
 addCard();
 addCard();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
 </script>
 </body>
 </html>
