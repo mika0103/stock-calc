@@ -184,9 +184,24 @@ header h1 { font-size: 22px; font-weight: 700; }
 }
 .add-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
 
-@media (max-width: 480px) {
-  .results-row { grid-template-columns: repeat(2, 1fr); }
-  .sum-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 520px) {
+  body { padding: 12px 10px; }
+  header h1 { font-size: 18px; }
+  .card { padding: 12px; }
+  .card-head { gap: 6px; margin-bottom: 10px; }
+  .name-inp { font-size: 15px; padding: 7px 10px; }
+  .del-btn { width: 32px; height: 32px; font-size: 17px; border-radius: 8px; }
+  .inputs-row { gap: 6px; margin-bottom: 10px; }
+  .field label { font-size: 11px; }
+  .field-wrap input { font-size: 16px; padding: 8px 24px 8px 8px; }
+  .field-wrap input::placeholder { font-size: 14px; }
+  .unit { font-size: 11px; right: 7px; }
+  .res-box { padding: 7px 8px; }
+  .res-label { font-size: 11px; }
+  .res-val { font-size: 16px; }
+  .summary { padding: 10px 12px; }
+  .sum-val { font-size: 18px; }
+  .add-btn { font-size: 15px; padding: 13px; }
 }
 </style>
 </head>
