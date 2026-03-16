@@ -70,12 +70,13 @@ header h1 { font-size: 22px; font-weight: 700; }
   flex: 1;
   background: #f4f6f9;
   border: 2px solid #e2e6ea;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #111;
-  font-size: 18px;
-  font-weight: 700;
-  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 10px;
   outline: none;
+  min-width: 0;
 }
 .name-inp:focus { border-color: #3b82f6; background: #fff; }
 .name-inp::placeholder { color: #bbb; font-weight: 400; }
@@ -123,28 +124,40 @@ header h1 { font-size: 22px; font-weight: 700; }
   pointer-events: none;
 }
 
-.results-row {
+.results-area { margin-top: 4px; }
+.res-main {
+  background: #f4f6f9;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.res-main-label { font-size: 12px; color: #888; font-weight: 700; }
+.res-main-val { font-size: 30px; font-weight: 900; color: #ccc; font-variant-numeric: tabular-nums; }
+.res-sub-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 6px;
 }
 .res-box {
   background: #f4f6f9;
   border-radius: 10px;
-  padding: 8px 12px;
+  padding: 7px 10px;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: 4px;
 }
-.res-label { font-size: 12px; color: #888; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
-.res-val { font-size: 20px; font-weight: 800; color: #ccc; font-variant-numeric: tabular-nums; text-align: right; }
-.res-val.pos { color: #16a34a; }
-.res-val.neg { color: #dc2626; }
-.res-val.neu { color: #333; }
+.res-label { font-size: 11px; color: #888; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.res-val { font-size: 15px; font-weight: 800; color: #ccc; font-variant-numeric: tabular-nums; text-align: right; }
+.res-main-val.pos, .res-val.pos { color: #16a34a; }
+.res-main-val.neg, .res-val.neg { color: #dc2626; }
+.res-main-val.neu, .res-val.neu { color: #333; }
 .res-val.rate-pos { color: #2563eb; }
 .res-val.rate-neg { color: #dc2626; }
-.res-val.tax { color: #a855f7; }
+.res-main-val.tax, .res-val.tax { color: #a855f7; }
 
 .summary {
   background: #fff;
@@ -189,16 +202,17 @@ header h1 { font-size: 22px; font-weight: 700; }
   header h1 { font-size: 18px; }
   .card { padding: 12px; }
   .card-head { gap: 6px; margin-bottom: 10px; }
-  .name-inp { font-size: 15px; padding: 7px 10px; }
-  .del-btn { width: 32px; height: 32px; font-size: 17px; border-radius: 8px; }
+  .del-btn { width: 30px; height: 30px; font-size: 16px; border-radius: 8px; }
   .inputs-row { gap: 6px; margin-bottom: 10px; }
   .field label { font-size: 11px; }
-  .field-wrap input { font-size: 16px; padding: 8px 24px 8px 8px; }
+  .field-wrap input { font-size: 18px; padding: 8px 24px 8px 8px; }
   .field-wrap input::placeholder { font-size: 14px; }
   .unit { font-size: 11px; right: 7px; }
-  .res-box { padding: 7px 8px; }
-  .res-label { font-size: 11px; }
-  .res-val { font-size: 16px; }
+  .res-main { padding: 8px 12px; margin-bottom: 5px; }
+  .res-main-val { font-size: 28px; }
+  .res-box { padding: 6px 8px; }
+  .res-label { font-size: 10px; }
+  .res-val { font-size: 13px; }
   .summary { padding: 10px 12px; }
   .sum-val { font-size: 18px; }
   .add-btn { font-size: 15px; padding: 13px; }
@@ -277,11 +291,16 @@ function renderCards() {
         '<div class="field"><label>株数</label><div class="field-wrap"><input type="number" id="shr-' + id + '" placeholder="100" value="' + esc(c.shares) + '" min="0" oninput="upd(' + id + ',\'shares\',this.value)"><span class="unit">株</span></div></div>' +
         '<div class="field"><label>目標価格</label><div class="field-wrap"><input type="number" id="tgt-' + id + '" placeholder="3000" value="' + esc(c.target) + '" min="0" oninput="upd(' + id + ',\'target\',this.value)"><span class="unit">円</span></div></div>' +
       '</div>' +
-      '<div class="results-row">' +
-        '<div class="res-box"><div class="res-label">元本</div><div class="res-val neu" id="r-cost-' + id + '">—</div></div>' +
-        '<div class="res-box"><div class="res-label">利益</div><div class="res-val" id="r-profit-' + id + '">—</div></div>' +
-        '<div class="res-box"><div class="res-label">上昇率</div><div class="res-val" id="r-rate-' + id + '">—</div></div>' +
-        '<div class="res-box" id="r-taxbox-' + id + '"><div class="res-label">税引後</div><div class="res-val" id="r-tax-' + id + '">—</div></div>' +
+      '<div class="results-area">' +
+        '<div class="res-main">' +
+          '<span class="res-main-label">利益</span>' +
+          '<span class="res-main-val" id="r-profit-' + id + '">—</span>' +
+        '</div>' +
+        '<div class="res-sub-row">' +
+          '<div class="res-box"><span class="res-label">元本</span><span class="res-val neu" id="r-cost-' + id + '">—</span></div>' +
+          '<div class="res-box"><span class="res-label">上昇率</span><span class="res-val" id="r-rate-' + id + '">—</span></div>' +
+          '<div class="res-box" id="r-taxbox-' + id + '"><span class="res-label">税引後</span><span class="res-val" id="r-tax-' + id + '">—</span></div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }
@@ -326,7 +345,7 @@ function recalcAll() {
 
     if (!buy || !shares || !target || buy <= 0 || shares <= 0 || target <= 0) {
       elCost.textContent = '—';   elCost.className = 'res-val neu';
-      elProfit.textContent = '—'; elProfit.className = 'res-val';
+      elProfit.textContent = '—'; elProfit.className = 'res-main-val';
       elRate.textContent = '—';   elRate.className = 'res-val';
       elTax.textContent = '—';    elTax.className = 'res-val';
       continue;
@@ -347,7 +366,7 @@ function recalcAll() {
     elCost.textContent   = fmt(cost) + '円';
     elCost.className     = 'res-val neu';
     elProfit.textContent = (profit >= 0 ? '+' : '') + fmt(profit) + '円';
-    elProfit.className   = 'res-val ' + cls;
+    elProfit.className   = 'res-main-val ' + cls;
     elRate.textContent   = (rate >= 0 ? '+' : '') + rate.toFixed(2) + '%';
     elRate.className     = 'res-val ' + (rate > 0 ? 'rate-pos' : rate < 0 ? 'rate-neg' : 'neu');
     elTax.textContent    = (afterTax >= 0 ? '+' : '') + fmt(afterTax) + '円';
