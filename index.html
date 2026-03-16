@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>株利益シミュレーター</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2316a34a'/%3E%3Cpolyline points='8,44 20,28 32,36 44,16 56,24' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #f4f6f9;
+  color: #111;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 20px 16px;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+header h1 { font-size: 22px; font-weight: 700; }
+
+.tax-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.switch { position: relative; width: 44px; height: 26px; display: inline-block; }
+.switch input { display: none; }
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: 26px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  top: 4px; left: 4px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.switch input:checked + .slider { background: #22c55e; }
+.switch input:checked + .slider::before { transform: translateX(18px); }
+
+.cards { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+
+.card {
+  background: #fff;
+  border: 2px solid #e2e6ea;
+  border-radius: 16px;
+  padding: 18px;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.card-num { font-size: 13px; color: #999; font-weight: 700; min-width: 20px; }
+.name-inp {
+  flex: 1;
+  background: #f4f6f9;
+  border: 2px solid #e2e6ea;
+  border-radius: 10px;
+  color: #111;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 8px 14px;
+  outline: none;
+}
+.name-inp:focus { border-color: #3b82f6; background: #fff; }
+.name-inp::placeholder { color: #bbb; font-weight: 400; }
+.del-btn {
+  background: #fee2e2;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 20px;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.inputs-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; color: #666; font-weight: 700; }
+.field-wrap { position: relative; }
+.field-wrap input {
+  width: 100%;
+  background: #f4f6f9;
+  border: 2px solid #e2e6ea;
+  border-radius: 10px;
+  color: #111;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 10px 32px 10px 12px;
+  outline: none;
+  -moz-appearance: textfield;
+}
+.field-wrap input::-webkit-outer-spin-button,
+.field-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.field-wrap input:focus { border-color: #3b82f6; background: #fff; }
+.field-wrap input::placeholder { color: #ccc; font-size: 18px; }
+.unit {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px; color: #999; font-weight: 600;
+  pointer-events: none;
+}
+
+.results-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.res-box {
+  background: #f4f6f9;
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+.res-label { font-size: 12px; color: #888; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.res-val { font-size: 20px; font-weight: 800; color: #ccc; font-variant-numeric: tabular-nums; text-align: right; }
+.res-val.pos { color: #16a34a; }
+.res-val.neg { color: #dc2626; }
+.res-val.neu { color: #333; }
+.res-val.rate-pos { color: #2563eb; }
+.res-val.rate-neg { color: #dc2626; }
+.res-val.tax { color: #a855f7; }
+
+.summary {
+  background: #fff;
+  border: 2px solid #e2e6ea;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.sum-title { font-size: 12px; color: #999; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sum-row {
+  background: #f4f6f9;
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+.sum-label { font-size: 12px; color: #888; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.sum-val { font-size: 22px; font-weight: 800; color: #ccc; font-variant-numeric: tabular-nums; text-align: right; }
+.sum-val.pos { color: #16a34a; }
+.sum-val.neg { color: #dc2626; }
+.sum-val.neu { color: #111; }
+.sum-val.tax { color: #a855f7; }
+
+.add-btn {
+  width: 100%;
+  background: #fff;
+  border: 2px dashed #c8cdd4;
+  border-radius: 14px;
+  color: #999;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 16px;
+  cursor: pointer;
+}
+.add-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+
+@media (max-width: 480px) {
+  .results-row { grid-template-columns: repeat(2, 1fr); }
+  .sum-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>株利益シミュレーター</h1>
+  <div class="tax-row">
+    <span>税引後</span>
+    <label class="switch">
+      <input type="checkbox" id="taxToggle" checked onchange="recalcAll()">
+      <span class="slider"></span>
+    </label>
+  </div>
+</header>
+
+<div class="cards" id="cards"></div>
+
+<div class="summary">
+  <div class="sum-title">合計</div>
+  <div class="sum-grid">
+    <div class="sum-row">
+      <span class="sum-label">総利益</span>
+      <span class="sum-val" id="sProfit">—</span>
+    </div>
+    <div class="sum-row" id="sTaxBox">
+      <span class="sum-label">税引後</span>
+      <span class="sum-val" id="sTax">—</span>
+    </div>
+    <div class="sum-row" style="grid-column: span 2">
+      <span class="sum-label">投資元本</span>
+      <span class="sum-val neu" id="sCost">—</span>
+    </div>
+  </div>
+</div>
+
+<button class="add-btn" onclick="addCard()">＋ 銘柄を追加</button>
+
+<script>
+var TAX = 0.20315;
+var cards = [];
+var nextId = 1;
+
+function addCard() {
+  var id = nextId++;
+  cards.push({ id: id, name: '', buy: '', shares: '100', target: '' });
+  renderCards();
+  setTimeout(function() {
+    var el = document.getElementById('name-' + id);
+    if (el) el.focus();
+  }, 20);
+}
+
+function removeCard(id) {
+  cards = cards.filter(function(c) { return c.id !== id; });
+  renderCards();
+}
+
+function renderCards() {
+  var container = document.getElementById('cards');
+  var html = '';
+  for (var i = 0; i < cards.length; i++) {
+    var c = cards[i];
+    var id = c.id;
+    html += '<div class="card">' +
+      '<div class="card-head">' +
+        '<span class="card-num">' + (i + 1) + '</span>' +
+        '<input class="name-inp" id="name-' + id + '" placeholder="銘柄名（例: トヨタ）" value="' + esc(c.name) + '" maxlength="20" oninput="upd(' + id + ',\'name\',this.value)">' +
+        '<button class="del-btn" onclick="removeCard(' + id + ')">×</button>' +
+      '</div>' +
+      '<div class="inputs-row">' +
+        '<div class="field"><label>購入価格</label><div class="field-wrap"><input type="number" id="buy-' + id + '" placeholder="2500" value="' + esc(c.buy) + '" min="0" oninput="upd(' + id + ',\'buy\',this.value)"><span class="unit">円</span></div></div>' +
+        '<div class="field"><label>株数</label><div class="field-wrap"><input type="number" id="shr-' + id + '" placeholder="100" value="' + esc(c.shares) + '" min="0" oninput="upd(' + id + ',\'shares\',this.value)"><span class="unit">株</span></div></div>' +
+        '<div class="field"><label>目標価格</label><div class="field-wrap"><input type="number" id="tgt-' + id + '" placeholder="3000" value="' + esc(c.target) + '" min="0" oninput="upd(' + id + ',\'target\',this.value)"><span class="unit">円</span></div></div>' +
+      '</div>' +
+      '<div class="results-row">' +
+        '<div class="res-box"><div class="res-label">元本</div><div class="res-val neu" id="r-cost-' + id + '">—</div></div>' +
+        '<div class="res-box"><div class="res-label">利益</div><div class="res-val" id="r-profit-' + id + '">—</div></div>' +
+        '<div class="res-box"><div class="res-label">上昇率</div><div class="res-val" id="r-rate-' + id + '">—</div></div>' +
+        '<div class="res-box" id="r-taxbox-' + id + '"><div class="res-label">税引後</div><div class="res-val" id="r-tax-' + id + '">—</div></div>' +
+      '</div>' +
+    '</div>';
+  }
+  container.innerHTML = html;
+  recalcAll();
+}
+
+function esc(v) {
+  return String(v).replace(/"/g, '&quot;');
+}
+
+function upd(id, field, value) {
+  for (var i = 0; i < cards.length; i++) {
+    if (cards[i].id === id) {
+      cards[i][field] = value;
+      break;
+    }
+  }
+  recalcAll();
+}
+
+function recalcAll() {
+  var showTax = document.getElementById('taxToggle').checked;
+  var totalCost = 0, totalProfit = 0, totalTax = 0;
+  var hasAny = false;
+
+  for (var i = 0; i < cards.length; i++) {
+    var c = cards[i];
+    var id = c.id;
+    var buy = parseFloat(c.buy);
+    var shares = parseFloat(c.shares);
+    var target = parseFloat(c.target);
+
+    var elCost   = document.getElementById('r-cost-' + id);
+    var elProfit = document.getElementById('r-profit-' + id);
+    var elRate   = document.getElementById('r-rate-' + id);
+    var elTax    = document.getElementById('r-tax-' + id);
+    var elTaxBox = document.getElementById('r-taxbox-' + id);
+    if (!elCost) continue;
+
+    if (elTaxBox) elTaxBox.style.display = showTax ? '' : 'none';
+
+    if (!buy || !shares || !target || buy <= 0 || shares <= 0 || target <= 0) {
+      elCost.textContent = '—';   elCost.className = 'res-val neu';
+      elProfit.textContent = '—'; elProfit.className = 'res-val';
+      elRate.textContent = '—';   elRate.className = 'res-val';
+      elTax.textContent = '—';    elTax.className = 'res-val';
+      continue;
+    }
+
+    var cost    = buy * shares;
+    var profit  = (target - buy) * shares;
+    var rate    = (profit / cost) * 100;
+    var afterTax = profit > 0 ? profit * (1 - TAX) : profit;
+
+    hasAny = true;
+    totalCost   += cost;
+    totalProfit += profit;
+    totalTax    += afterTax;
+
+    var cls = profit > 0 ? 'pos' : profit < 0 ? 'neg' : 'neu';
+
+    elCost.textContent   = fmt(cost) + '円';
+    elCost.className     = 'res-val neu';
+    elProfit.textContent = (profit >= 0 ? '+' : '') + fmt(profit) + '円';
+    elProfit.className   = 'res-val ' + cls;
+    elRate.textContent   = (rate >= 0 ? '+' : '') + rate.toFixed(2) + '%';
+    elRate.className     = 'res-val ' + (rate > 0 ? 'rate-pos' : rate < 0 ? 'rate-neg' : 'neu');
+    elTax.textContent    = (afterTax >= 0 ? '+' : '') + fmt(afterTax) + '円';
+    elTax.className      = 'res-val ' + (showTax ? 'tax' : '');
+  }
+
+  var sCost   = document.getElementById('sCost');
+  var sProfit = document.getElementById('sProfit');
+  var sTax    = document.getElementById('sTax');
+  var sTaxBox = document.getElementById('sTaxBox');
+  if (sTaxBox) sTaxBox.style.display = showTax ? '' : 'none';
+
+  if (!hasAny) {
+    sCost.textContent = '—';   sCost.className = 'sum-val neu';
+    sProfit.textContent = '—'; sProfit.className = 'sum-val';
+    sTax.textContent = '—';    sTax.className = 'sum-val';
+  } else {
+    var sc = totalProfit > 0 ? 'pos' : totalProfit < 0 ? 'neg' : 'neu';
+    sCost.textContent   = fmt(totalCost) + '円';
+    sCost.className     = 'sum-val neu';
+    sProfit.textContent = (totalProfit >= 0 ? '+' : '') + fmt(totalProfit) + '円';
+    sProfit.className   = 'sum-val ' + sc;
+    sTax.textContent    = (totalTax >= 0 ? '+' : '') + fmt(totalTax) + '円';
+    sTax.className      = 'sum-val ' + (showTax ? 'tax' : sc);
+  }
+}
+
+function fmt(n) {
+  var abs = Math.abs(n);
+  if (abs >= 100000000) return (n / 100000000).toFixed(2) + '億';
+  if (abs >= 10000) return (n / 10000).toFixed(1) + '万';
+  return Math.round(n).toLocaleString('ja-JP');
+}
+
+addCard();
+addCard();
+</script>
+</body>
+</html>
